@@ -1,7 +1,9 @@
 {
     "name": "software.contraband.data.Editor",
     "rootNamespace": "Software.Contraband.Data",
-    "references": [],
+    "references": [
+        "GUID:c03b3f07dfe5c90bcbe22e1131693cb4"
+    ],
     "includePlatforms": [
         "Editor"
     ],

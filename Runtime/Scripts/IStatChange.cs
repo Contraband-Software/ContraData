@@ -1,11 +1,9 @@
-
-
 namespace Software.Contraband.Data
 {
-    public interface IStatChange
+    public interface IStatChange<in T>
     {
-        float GetStatChange(Stat stat);
-        float GetStatMultiplier(Stat stat);
+        float GetStatChange(T stat);
+        float GetStatMultiplier(T stat);
 
         void ResetModifier();
     }

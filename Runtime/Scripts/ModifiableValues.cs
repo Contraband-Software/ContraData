@@ -2,16 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Software.Contraband.Data
 {
-    public sealed class SimpleModifiableValues : MonoBehaviour
+    public abstract class ModifiableValues<T> : MonoBehaviour where T : struct, IConvertible
     {
         // Public config
-        [SerializeField] private Stats baseStats;
+        [FormerlySerializedAs("baseStats")] [SerializeField] private GenericStatsAsset<T> baseGenericStats;
         
         // State
-        public List<IStatChange> ActiveModifiers { get; private set; } = new();
+        public List<IStatChange<T>> ActiveModifiers { get; private set; } = new();
         
         #region Public API
         /// <summary>
@@ -19,9 +20,9 @@ namespace Software.Contraband.Data
         /// </summary>
         /// <param name="stat"></param>
         /// <returns></returns>
-        public StatValue GetBaseStatInfo(Stat stat)
+        public GenericStatsAsset<T>.StatValue GetBaseStatInfo(T stat)
         {
-            var s = baseStats.GetStat(stat);
+            var s = baseGenericStats.GetStat(stat);
 #if UNITY_EDITOR
             if (s is null)
                 throw new InvalidOperationException("This stat has no base value recorded in the stats asset!");
@@ -34,9 +35,9 @@ namespace Software.Contraband.Data
         /// </summary>
         /// <param name="stat"></param>
         /// <returns></returns>
-        public float GetStat(Stat stat)
+        public float GetStat(T stat)
         {
-            var baseStat = baseStats.GetStat(stat).value;
+            var baseStat = baseGenericStats.GetStat(stat).value;
             ActiveModifiers.ForEach(f => baseStat += PollChange(f, stat));
             ActiveModifiers.ForEach(f => baseStat *= PollMultiplier(f, stat));
             return baseStat;
@@ -45,8 +46,8 @@ namespace Software.Contraband.Data
         /// <summary>
         /// Overwrite the active firmwares.
         /// </summary>
-        /// <param name="types"></param>
-        public void SetModifiers(IEnumerable<IStatChange> modifiers)
+        /// <param name="modifiers"></param>
+        public void SetModifiers(IEnumerable<IStatChange<T>> modifiers)
             => ActiveModifiers = modifiers.ToList();
 
         /// <summary>
@@ -66,7 +67,7 @@ namespace Software.Contraband.Data
         #endregion
 
         #region GET_UPGRADE_VALUE
-        private static float PollChange(IStatChange statChange, Stat stat)
+        private static float PollChange(IStatChange<T> statChange, T stat)
         {
             try
             {
@@ -80,7 +81,7 @@ namespace Software.Contraband.Data
             }
         }
 
-        private static float PollMultiplier(IStatChange statChange, Stat stat)
+        private static float PollMultiplier(IStatChange<T> statChange, T stat)
         {
             try
             {
