@@ -1,15 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Software.Contraband.Data.System;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace Software.Contraband.Data
 {
-    public abstract class ModifiableValues<T> : MonoBehaviour where T : struct, IConvertible
+    public abstract class ModifiableValues<T, V> : MonoBehaviour 
+        where T : struct, Enum
+        where V : unmanaged // int, byte, float, etc. Only, no reference types, not even strings
     {
         // Public config
-        [FormerlySerializedAs("baseStats")] [SerializeField] private GenericStatsAsset<T> baseGenericStats;
+        [FormerlySerializedAs("baseStats")] [SerializeField] private GenericStatsAsset<T, V> baseGenericStats;
         
         // State
         public List<IStatChange<T>> ActiveModifiers { get; private set; } = new();
@@ -20,7 +23,7 @@ namespace Software.Contraband.Data
         /// </summary>
         /// <param name="stat"></param>
         /// <returns></returns>
-        public GenericStatsAsset<T>.StatValue GetBaseStatInfo(T stat)
+        public GenericStatsAsset<T, V>.StatValue GetBaseStatInfo(T stat)
         {
             var s = baseGenericStats.GetStat(stat);
 #if UNITY_EDITOR
@@ -35,12 +38,18 @@ namespace Software.Contraband.Data
         /// </summary>
         /// <param name="stat"></param>
         /// <returns></returns>
-        public float GetStat(T stat)
+        public V GetStat(T stat)
         {
-            var baseStat = baseGenericStats.GetStat(stat).value;
-            ActiveModifiers.ForEach(f => baseStat += PollChange(f, stat));
-            ActiveModifiers.ForEach(f => baseStat *= PollMultiplier(f, stat));
-            return baseStat;
+            V baseStat = baseGenericStats.GetStat(stat).value;
+#if UNITY_EDITOR
+            if (ActiveModifiers.Count > 0)
+                if (typeof(V).IsNumeric())
+                    throw new ArithmeticException("Attempted to use value modifiers on non-number types.");
+#endif
+            // ActiveModifiers.ForEach(f => baseStat += PollChange(f, stat));
+            // ActiveModifiers.ForEach(f => baseStat *= PollMultiplier(f, stat));
+            ExpressionEvaluator.Evaluate(baseStat.ToString(), out V res);
+            return res;
         }
         
         /// <summary>
