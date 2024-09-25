@@ -1,10 +1,13 @@
+using System;
+
 namespace Software.Contraband.Data
 {
+    // [Serializable]
     public interface IStatChange<in T>
     {
-        float GetStatChange(T stat);
-        float GetStatMultiplier(T stat);
+        public float GetStatChange(T stat);
+        public float GetStatMultiplier(T stat);
 
-        void ResetModifier();
+        public void ResetModifier();
     }
 }

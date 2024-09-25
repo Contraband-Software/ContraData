@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Software.Contraband.Data.System;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -16,6 +17,13 @@ namespace Software.Contraband.Data
         
         // State
         public List<IStatChange<T>> ActiveModifiers { get; private set; } = new();
+        
+        #region Unity Callbacks
+        // private void Update()
+        // {
+        //     print("Mods: " + ActiveModifiers.Count);
+        // }
+        #endregion
         
         #region Public API
         /// <summary>
@@ -51,13 +59,15 @@ namespace Software.Contraband.Data
             ExpressionEvaluator.Evaluate(baseStat.ToString(), out V res);
             return res;
         }
-        
+
         /// <summary>
         /// Overwrite the active firmwares.
         /// </summary>
         /// <param name="modifiers"></param>
         public void SetModifiers(IEnumerable<IStatChange<T>> modifiers)
-            => ActiveModifiers = modifiers.ToList();
+        {
+            ActiveModifiers = modifiers.ToList();
+        }
 
         /// <summary>
         /// Checks if a firmware upgrade is present.
